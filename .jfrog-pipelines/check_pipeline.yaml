@@ -1,0 +1,37 @@
+resources:
+  - name: released_artifact_deployed
+    type: Artifact
+    configuration:
+      jfrogPlatformProvider: jf_token_lnp
+      repositories:
+        - docker-releases-local
+      artifactPath:
+        include:
+          - jfrog/artifactory-service-online/*
+          - jfrog/artifactory-online/*
+          - jfrog/access/*
+          - jfrog/frontend/*
+          - jfrog/metadata/*
+          - jfrog/event/*
+          - jfrog/mission-control/*
+          - jfrog/jfconnect/*
+          - jfrog/jflink/*
+          - jfrog/router/*
+          - jfrog/observability/*
+      buildOn:
+        deployed: true
+        copied: true
+        moved: true
+      branches:
+        include: "^master$"
+pipelines:
+  - name: check
+    steps:
+      - name: step1
+        type: Bash
+        configuration:
+          inputResources:
+            - name: released_artifact_deployed
+        execution:
+          onExecute:
+            - echo "hello"

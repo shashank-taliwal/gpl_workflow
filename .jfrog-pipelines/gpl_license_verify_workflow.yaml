@@ -1,0 +1,200 @@
+# resources:
+#   - name: SBOM
+#     type: PropertyBag
+#     configuration:
+#       gpl: "true"
+#       pgpl: "true"
+#   - name: gplbag
+#     type: PropertyBag
+#     configuration:
+#       gpl: "false"
+#   - name: pgplbag
+#     type: PropertyBag
+#     configuration:
+#       pgpl: "false"
+#   - name: result
+#     type: PropertyBag
+#     configuration:
+#       gpl: "false"
+# pipelines:
+#   - name: license_workflow
+#     configuration:
+#       environmentVariables:
+#         readOnly:
+#           PROJECT_DISTRIBUTION:
+#             default: "External"
+#             values:
+#               - "External"
+#               - "Internal"
+#               - "SaaS"
+#           COMPONENT_USAGE:
+#             default: "Static"
+#             values:
+#               - "Static"
+#               - "Dynamic"
+#               - "DevTool"
+#               - "Excluded"
+#               - "SeperateWork"
+#               - "Other"
+#           OSS_MODIFIED:
+#             default: "Yes"
+#             values:
+#               - "Yes"
+#               - "No"
+#     steps:
+#       - name: initiate
+#         type: Bash
+#         configuration:
+#           inputResources:
+#             - name: SBOM
+#           outputResources:
+#             - name: gplbag
+#             - name: pgplbag
+#         execution:
+#           onExecute:
+#             - echo "$res_SBOM_gpl"
+#             - echo "$res_SBOM_gpl" == true
+#             - echo "$res_SBOM_spl" == "true"
+#             - if [ "$res_SBOM_gpl" == true ]; then
+#                 write_output gplbag gpl=true
+#                 exit 0;
+#               fi
+#             - exit 0;
+#       - name: gpl_verify
+#         type: Bash
+#         configuration:
+#            inputResources:
+#             - name: gplbag
+#               trigger: true
+#            condition: $res_gplbag_gpl == true
+#         execution:
+#           onExecute:
+#             - if [[ "$PROJECT_DISTRIBUTION" == "Internal" || "$PROJECT_DISTRIBUTION" == "SaaS" ]]; then
+#               add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='false';
+#               exit 0;
+#               fi
+#             - if [[ "$COMPONENT_USAGE" == "DevTool" || "$COMPONENT_USAGE" == "Excluded" ]]; then
+#               add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='false';
+#               exit 0;
+#               fi
+#             - if [[ "$COMPONENT_USAGE" == "SeperateWork" && "$OSS_MODIFIED" == "No" ]]; then
+#               add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='false';
+#               exit 0;
+#               fi
+#             - add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='true';
+#             - add_run_variables APPROVED_BY_LEGAL_TEAM='false';
+#       - name: gpl_legal_team_approval
+#         type: Bash
+#         configuration:
+#           requiresApproval:
+#             timeoutSeconds: 120
+#             approvers:
+#               - admin
+#           condition: LEGAL_TEAM_APPROVAL_REQUIRED == 'true'
+#           inputSteps:
+#             - name: gpl_verify
+#         execution:
+#           onExecute:
+#             - echo "This step checks for legal team approval";
+#             - echo $LEGAL_TEAM_APPROVAL_REQUIRED;
+#             - add_run_variables APPROVED_BY_LEGAL_TEAM='true';
+#       - name: gpl_result
+#         type: Bash
+#         configuration:
+#          condition: $res_gplbag_gpl == "true"
+#          outputResources:
+#           - name: result
+#          inputSteps:
+#           - name: gpl_legal_team_approval
+#             status:
+#               - skipped
+#               - cancelled
+#               - success
+#         execution:
+#           onExecute:
+#             - echo 'Approved by legal team =' $APPROVED_BY_LEGAL_TEAM;
+#             - echo 'LEGAL_TEAM_APPROVAL_REQUIRED =' $LEGAL_TEAM_APPROVAL_REQUIRED;
+#             - if [[ "$APPROVED_BY_LEGAL_TEAM" == "true" || "$LEGAL_TEAM_APPROVAL_REQUIRED" == 'false' ]]; then
+#               echo "No major GPL violations found";
+#               write_output gplbag "gpl=true";
+#               exit 0;
+#               fi
+#             - echo "GPL violations found";
+#             - write_output result "gpl=false"
+#             - exit 1;
+#       - name: pgpl_verify
+#         type: Bash
+#         configuration:
+#            inputResources:
+#             - name: pgplbag
+#               trigger: true
+#            condition: $res_pgplbag_gpl == "true"
+#         execution:
+#           onExecute:
+#             - if [[ "$PROJECT_DISTRIBUTION" == "Internal" || "$PROJECT_DISTRIBUTION" == "SaaS" ]]; then
+#               add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='false';
+#               exit 0;
+#               fi
+#             - if [[ "$COMPONENT_USAGE" == "DevTool" || "$COMPONENT_USAGE" == "Excluded" ]]; then
+#               add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='false';
+#               exit 0;
+#               fi
+#             - if [[ "$COMPONENT_USAGE" == "SeperateWork" && "$OSS_MODIFIED" == "No" ]]; then
+#               add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='false';
+#               exit 0;
+#               fi
+#             - add_run_variables LEGAL_TEAM_APPROVAL_REQUIRED='true';
+#             - add_run_variables APPROVED_BY_LEGAL_TEAM='false';
+#       - name: pgpl_legal_team_approval
+#         type: Bash
+#         configuration:
+#           requiresApproval:
+#             timeoutSeconds: 120
+#             approvers:
+#               - admin
+#           condition: LEGAL_TEAM_APPROVAL_REQUIRED == 'true'
+#           inputSteps:
+#             - name: pgpl_verify
+#         execution:
+#           onExecute:
+#             - echo "This step checks for legal team approval";
+#             - echo $LEGAL_TEAM_APPROVAL_REQUIRED;
+#             - add_run_variables APPROVED_BY_LEGAL_TEAM='true';
+#       - name: pgpl_result
+#         type: Bash
+#         configuration:
+#          condition: $res_gplbag_gpl == "true"
+#          outputResources:
+#           - name: result
+#          inputSteps:
+#           - name: pgpl_legal_team_approval
+#             status:
+#               - skipped
+#               - cancelled
+#               - success
+#         execution:
+#           onExecute:
+#             - echo 'Approved by legal team =' $APPROVED_BY_LEGAL_TEAM;
+#             - echo 'LEGAL_TEAM_APPROVAL_REQUIRED =' $LEGAL_TEAM_APPROVAL_REQUIRED;
+#             - if [[ "$APPROVED_BY_LEGAL_TEAM" == "true" || "$LEGAL_TEAM_APPROVAL_REQUIRED" == 'false' ]]; then
+#               echo "No major GPL violations found";
+#               write_output gplbag "gpl=true";
+#               exit 0;
+#               fi
+#             - echo "GPL violations found";
+#             - write_output result "gpl=false"
+#             - exit 1;
+#       - name: result
+#         type: Bash
+#         configuration:
+#           inputResources:
+#             - name: result
+#         execution:
+#           onExecute:
+#             - if [[ $res_result_gpl == "false" ]]; then
+#               echo "GPL violations found";
+#               write_output gplbag "gpl=true";
+#               exit 1;
+#               fi
+#             - echo "No violations found";
+#             - exit 0;
