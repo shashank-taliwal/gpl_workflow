@@ -1,0 +1,226 @@
+template: true
+valuesFilePath: ./values.yml
+resources: 
+  - name: Properties
+    type: PropertyBag
+    configuration:
+      Distribution: 'Internal'
+      {{- range $license:= $.Values.licenses}}
+        {{- range $artifact := $license.artifacts}}
+      Usage_{{$artifact.name}}: 'Static'
+      OssModified_{{$artifact.name}}: 'true'
+      DistributedToEndUser_{{$artifact.name}}: 'true'
+        {{- end}}
+      {{- end}}
+pipelines:
+  - name: parent_verifier
+    configuration: 
+      inputResources:
+        - name: 'Properties'
+    steps:
+      - name: initiate
+        type: Bash
+        execution:
+          onExecute:
+            - echo 'hello world'
+    {{- range $license := $.Values.licenses}}
+      {{- range $license.artifacts}}
+      - name: {{.name}}_{{$license.name}}_validation
+        type: TriggerPipeline
+        configuration:
+          pipelineName: {{$license.name}}
+          stepName: distribution_validation
+          integrations:
+            - name: platform_token
+          inputSteps:
+            - name: initiate
+          environmentVariables:
+            inputResource: {{.name}}_{{$license.name}}_bag
+        execution:
+          onStart:
+            - echo ${res_Properties_Distribution}
+            - echo ${res_Properties_Usage_{{.name}}}
+            - set_trigger_payload pipelineVariables "PROJECT_DISTRIBUTION=${res_Properties_Distribution}" "COMPONENT_USAGE=${res_Properties_Usage_{{.name}}}" "OSS_MODIFIED=${res_Properties_OssModified_{{.name}}}" "DISTRIBUTED_TO_END_USER=${res_Properties_DistributedToEndUser_{{.name}}}"
+     {{- end}}
+    {{- end}}
+  - name: lgpl
+    configuration:
+      affinityGroup: lgpl
+      environmentVariables:
+        readOnly:
+          PROJECT_DISTRIBUTION:
+            default: "External"
+            values:
+              - "External"
+              - "Internal"
+              - "SaaS"
+          COMPONENT_USAGE:
+            default: "Static"
+            values:
+              - "Static"
+              - "Dynamic"
+              - "DevTool"
+              - "Excluded"
+              - "SeperateWork"
+              - "Other"
+          OSS_MODIFIED:
+            default: "true"
+            values:
+              - "true"
+              - "false"
+          DISTRIBUTED_TO_END_USER:
+            default: "true"
+            values:
+              - "true"
+              - "false"
+    steps:
+      - name: distribution_validation
+        type: Bash
+        execution: 
+          onExecute: 
+            - add_run_variables SKIP_TO_SUCCESS='false';
+            - if [[ "$PROJECT_DISTRIBUTION" == "Internal" || "$PROJECT_DISTRIBUTION" == "SaaS" ]]; then
+                add_run_variables SKIP_TO_SUCCESS='true';
+                exit 0;
+              fi
+      - name: usage_validation
+        type: Bash
+        configuration:
+          condition: SKIP_TO_SUCCESS == 'false'
+          inputSteps: 
+            - name: distribution_validation
+        execution:
+          onExecute:
+            - if [[ "$COMPONENT_USAGE" == "DevTool" || "$COMPONENT_USAGE" == "Excluded" ]]; then
+                add_run_variables SKIP_TO_SUCCESS='true';
+                exit 0;
+              fi
+            - if [[ "$COMPONENT_USAGE" == "SeperateWork" || "$COMPONENT_USAGE" == "Dynamic" ]]; then
+                add_run_variables MODIFICATION_VALIDATION_REQUIRED='true';
+                exit 0;
+              fi
+            - add_run_variables LEGAL_APPROVAL_NEEDED='true';
+      - name: modification_validation
+        type: Bash
+        configuration:
+          condition: SKIP_TO_SUCCESS == 'false' && MODIFICATION_VALIDATION_REQUIRED == 'true'
+          inputSteps: 
+            - name: usage_validation
+        execution:
+          onExecute:
+            - if [[ "$OSS_MODIFIED" == "false" ]]; then
+                add_run_variables END_USER_DISTRIBUTION_VALIDATION='true';
+                exit 0;
+              fi
+            - add_run_variables LEGAL_APPROVAL_NEEDED='true';
+      - name: end_user_distribution_validation
+        type: Bash
+        configuration:
+          inputSteps:
+            - name: modification_validation
+          condition: SKIP_TO_SUCCESS == 'false' && END_USER_DISTRIBUTION_VALIDATION == 'true'
+        execution:
+          onExecute:
+            - if [[ "$DISTRIBUTED_TO_END_USER" == "false" ]]; then
+                add_run_variables SKIP_TO_SUCCESS='true';
+                exit 0;
+              fi
+            - add_run_variables LEGAL_APPROVAL_NEEDED='true';
+      - name: previous_approval_validation
+        type: Bash
+        configuration:
+          inputSteps:
+            - name: usage_validation
+            - name: modification_validation
+              status:
+                - 'success'
+                - 'skipped'
+            - name: end_user_distribution_validation
+              status:
+                - 'success'
+                - 'skipped'
+          condition: LEGAL_APPROVAL_NEEDED == 'true'
+        execution:
+          onExecute: 
+            - echo $SKIP_TO_SUCCESS
+            - echo $LEGAL_APPROVAL_NEEDED
+            - echo "Legal Review Needed";
+            - exit 1;
+  - name: gpl
+    configuration:
+      affinityGroup: gpl
+      environmentVariables:
+        readOnly:
+          PROJECT_DISTRIBUTION:
+            default: "External"
+            values:
+              - "External"
+              - "Internal"
+              - "SaaS"
+          COMPONENT_USAGE:
+            default: "Static"
+            values:
+              - "Static"
+              - "Dynamic"
+              - "DevTool"
+              - "Excluded"
+              - "SeperateWork"
+              - "Other"
+          OSS_MODIFIED:
+            default: "Yes"
+            values:
+              - "Yes"
+              - "No"
+    steps:
+      - name: distribution_validation
+        type: Bash
+        execution: 
+          onExecute: 
+          - add_run_variables SKIP_TO_SUCCESS='false';
+          - if [[ "$PROJECT_DISTRIBUTION" == "Internal" || "$PROJECT_DISTRIBUTION" == "SaaS" ]]; then
+              add_run_variables SKIP_TO_SUCCESS='true';
+              exit 0;
+              fi
+      - name: usage_validation
+        type: Bash
+        configuration:
+          condition: SKIP_TO_SUCCESS == 'false'
+          inputSteps: 
+            - name: distribution_validation
+        execution:
+          onExecute:
+            - if [[ "$COMPONENT_USAGE" == "DevTool" || "$COMPONENT_USAGE" == "Excluded" ]]; then
+              add_run_variables SKIP_TO_SUCCESS='true';
+              exit 0;
+              fi
+      - name: modification_validation
+        type: Bash
+        configuration:
+          condition: SKIP_TO_SUCCESS == 'false'
+          inputSteps: 
+            - name: usage_validation
+        execution:
+          onExecute:
+             - if [[ "$COMPONENT_USAGE" == "SeperateWork" && "$OSS_MODIFIED" == "No" ]]; then
+              add_run_variables SKIP_TO_SUCCESS='true';
+              exit 0;
+              fi    
+      - name: previous_approval_validation
+        type: Bash
+        configuration:
+          inputSteps:
+            - name: modification_validation
+            - name: usage_validation
+        execution:
+          onExecute: 
+          - if [[ "$SKIP_TO_SUCCESS" == "true" ]]; then
+              exit 0;
+            fi   
+          - echo "Legal Review Needed";
+          - exit 1;
+
+        
+
+      
+
+        

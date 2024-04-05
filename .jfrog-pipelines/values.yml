@@ -1,0 +1,20 @@
+# licenses:
+#   - name: gpl
+#     artifacts: 
+#       - name: artifact1
+#       - name: artifact2
+#   - name: lgpl
+#     artifacts:
+#       - name: artifact3
+#       - name: artifact4
+
+name: 'Shashank'
+licenses:
+  - name: lgpl
+    artifacts:
+      - name: artifact1
+      - name: artifact2
+  - name: gpl
+    artifacts:
+      - name: artifact3
+      - name: artifact4
