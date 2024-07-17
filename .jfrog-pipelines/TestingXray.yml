@@ -38,6 +38,7 @@ pipelines:
                   - name: test
           execution:
               onExecute:
+                  - echo ${result}
                   - |
                       if {{eq "{{$result}}" "true"}} ; then
                           exit 0;
