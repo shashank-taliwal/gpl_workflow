@@ -41,7 +41,6 @@ pipelines:
                   - echo ${result}
                   - echo {{eq "{{$result}}" 'true'}}
                   - echo "{{result}}"
-                  - echo 'true'
                   - |
                       if {{eq "{{$result}}" 'true'}} ; then
                           exit 0;
