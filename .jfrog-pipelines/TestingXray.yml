@@ -6,7 +6,7 @@ resources:
     - name: scanResult
       type: PropertyBag
       configuration:
-          result: 'failure'
+          result: ''
 
 pipelines:
     - name: Testing_Xray_2
@@ -22,12 +22,14 @@ pipelines:
                 - name: build
                   trigger: true
           execution:
+            onStart:
+                - write_output scanResult "result='false'"
             onExecute:
                 - touch test.txt
                 - echo "Hello World" > test.txt
                 - jfrog scan test.txt
             onSuccess:
-                - write_output scanResult "result='Success'"
+                - write_output scanResult "result='true'"
         - name: test_result
           type: Bash
           configuration:
@@ -39,7 +41,7 @@ pipelines:
               onExecute:
                   - scanResult = ${res_scanResult_result}
                   - |
-                      if [[scanResult == 'success']] ; then
+                      if [[scanResult == 'true']] ; then
                           exit 0;
                       fi
                   - exit 1;
