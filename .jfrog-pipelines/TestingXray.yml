@@ -23,7 +23,7 @@ pipelines:
                   trigger: true
             outputResources:
                 - name: scanResult
-            timeoutSeconds: 60
+            timeoutSeconds: 200
           execution:
             onStart:
                 - echo "Starting"
