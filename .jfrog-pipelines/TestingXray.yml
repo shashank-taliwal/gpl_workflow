@@ -34,8 +34,6 @@ pipelines:
         - name: test_result
           type: Bash
           configuration:
-              inputResources:
-                  - name: scanResult
               inputSteps:
                   - name: test
           execution:
