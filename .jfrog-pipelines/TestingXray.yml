@@ -13,7 +13,7 @@ pipelines:
           type: Bash
           configuration:
             integrations:
-                - name: jfPat
+                - name: jfrogPat
             inputResources:
                 - name: build
                   trigger: true
