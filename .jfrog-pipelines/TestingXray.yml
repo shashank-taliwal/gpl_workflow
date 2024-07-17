@@ -9,7 +9,7 @@ resources:
           result: ''
 
 pipelines:
-    - name: Testing_Xray_2
+    - name: Testing_Xray_2_1
       configuration:
           jfrogCliVersion: 2
       steps: 
