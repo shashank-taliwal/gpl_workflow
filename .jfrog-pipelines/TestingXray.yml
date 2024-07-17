@@ -38,7 +38,7 @@ pipelines:
                   - name: test
           execution:
               onExecute:
-                  - echo $result
+                  - echo "Hello"
                   # - echo {{eq "{{$result}}" true}}
                   # - |
                   #     if {{eq $result 'true'}} ; then
