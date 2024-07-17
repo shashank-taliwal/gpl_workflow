@@ -31,17 +31,17 @@ pipelines:
                 - jfrog scan test.txt
             onSuccess:
                 - add_run_variables result='true'
-        - name: test_result
-          type: Bash
-          configuration:
-              inputSteps:
-                  - name: test
-          execution:
-              onExecute:
-                  - echo "Hello"
-                  # - echo {{eq "{{$result}}" true}}
-                  # - |
-                  #     if {{eq $result 'true'}} ; then
-                  #         exit 0;
-                  #     fi
-                  # - exit 1;
+        # - name: test_result
+        #   type: Bash
+        #   configuration:
+        #       inputSteps:
+        #           - name: test
+        #   execution:
+        #       onExecute:
+        #           - echo "Hello"
+        #           # - echo {{eq "{{$result}}" true}}
+        #           # - |
+        #           #     if {{eq $result 'true'}} ; then
+        #           #         exit 0;
+        #           #     fi
+        #           # - exit 1;
