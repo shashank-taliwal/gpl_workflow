@@ -30,7 +30,7 @@ pipelines:
                 - echo "Hello World" > test.txt
                 - jfrog scan test.txt
             onSuccess:
-                - ${result} = 'true'
+                - add_run_variables result='true'
         - name: test_result
           type: Bash
           configuration:
@@ -41,7 +41,7 @@ pipelines:
           execution:
               onExecute:
                   - |
-                      if [[${result} == 'true']] ; then
+                      if [[$result == 'true']] ; then
                           exit 0;
                       fi
                   - exit 1;
