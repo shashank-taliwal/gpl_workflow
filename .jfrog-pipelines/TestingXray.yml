@@ -23,14 +23,14 @@ pipelines:
                   trigger: true
           execution:
             onStart:
-                - add_run_variables INITIALISER='false'
-                - write_output scanResult "result=$INITIALISER"
+                - add_run_variables result='false'
+                # - write_output scanResult "result=$INITIALISER"
             onExecute:
                 - touch test.txt
                 - echo "Hello World" > test.txt
                 - jfrog scan test.txt
             onSuccess:
-                - write_output scanResult "result='true'"
+                - ${result} = 'true'
         - name: test_result
           type: Bash
           configuration:
@@ -40,9 +40,8 @@ pipelines:
                   - name: test
           execution:
               onExecute:
-                  - scanResult = ${res_scanResult_result}
                   - |
-                      if [[scanResult == 'true']] ; then
+                      if [[${result} == 'true']] ; then
                           exit 0;
                       fi
                   - exit 1;
