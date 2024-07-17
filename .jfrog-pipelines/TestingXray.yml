@@ -43,9 +43,6 @@ pipelines:
                 - name: test
           execution:
               onExecute:
-               - echo "Hello World"
-               - echo "Scan Result:"
-               - echo $res_scanResult_result
                - |
                   if [ $res_scanResult_result == "true" ]; then
                       exit 0;
