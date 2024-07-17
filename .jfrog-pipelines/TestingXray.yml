@@ -23,7 +23,7 @@ pipelines:
                   trigger: true
           execution:
             onStart:
-                - INITIALISER = 'false'
+                - add_run_variables INITIALISER='false'
                 - write_output scanResult "result=$INITIALISER"
             onExecute:
                 - touch test.txt
