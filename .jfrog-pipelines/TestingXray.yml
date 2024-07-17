@@ -39,7 +39,7 @@ pipelines:
           execution:
               onExecute:
                   - echo $result
-                  - echo {{eq "{{$result}}" true}}
+                  # - echo {{eq "{{$result}}" true}}
                   # - |
                   #     if {{eq $result 'true'}} ; then
                   #         exit 0;
