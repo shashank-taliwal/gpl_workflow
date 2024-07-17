@@ -17,7 +17,7 @@ pipelines:
           type: Bash
           configuration:
             integrations:
-              - name: jfrogPat
+               - name: jfrog_platform_embedded_pipelines
             inputResources:
                 - name: build
                   trigger: true
