@@ -9,39 +9,42 @@ resources:
           result: ''
 
 pipelines:
-    - name: Testing_Xray_2_1
+    - name: Testing_Xray
       configuration:
           jfrogCliVersion: 2
       steps: 
         - name: test
           type: Bash
           configuration:
-            integrations:
-                - name: jfrogPat
             inputResources:
                 - name: build
                   trigger: true
+            outputResources:
+                - name: scanResult
           execution:
             onStart:
-                - add_run_variables result='false'
-                # - write_output scanResult "result=$INITIALISER"
+                - echo "Starting"
+                - write_output "scanResult" "result=false" 
             onExecute:
                 - touch test.txt
                 - echo "Hello World" > test.txt
                 - jfrog scan test.txt
             onSuccess:
-                - add_run_variables result='true'
-        # - name: test_result
-        #   type: Bash
-        #   configuration:
-        #       inputSteps:
-        #           - name: test
-        #   execution:
-        #       onExecute:
-        #           - echo "Hello"
-        #           # - echo {{eq "{{$result}}" true}}
-        #           # - |
-        #           #     if {{eq $result 'true'}} ; then
-        #           #         exit 0;
-        #           #     fi
-        #           # - exit 1;
+                - write_output "scanResult" "result=false"
+        - name: result
+          type: Bash
+          configuration:
+            inputResources:
+                - name: scanResult
+            inputSteps:
+                - name: test
+          execution:
+              onExecute:
+               - echo "Hello World"
+               - echo "Scan Result:"
+               - echo $res_scanResult_result
+               - |
+                  if [ $res_scanResult_result == "true" ]; then
+                      exit 0;
+                  fi
+               - exit 1
