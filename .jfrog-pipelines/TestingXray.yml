@@ -3,6 +3,10 @@ resources:
       type: CronTrigger
       configuration:
         interval: '*/10 * * * *'
+    - name: scanResult
+      type: PropertyBag
+      configuration:
+          result: 'failure'
 
 pipelines:
     - name: Testing_Xray_2
@@ -22,3 +26,20 @@ pipelines:
                 - touch test.txt
                 - echo "Hello World" > test.txt
                 - jfrog scan test.txt
+            onSuccess:
+                - write_output scanResult "result='Success'"
+        - name: test_result
+          type: Bash
+          configuration:
+              inputResources:
+                  - name: scanResult
+              inputSteps:
+                  - name: test
+          execution:
+              onExecute:
+                  - scanResult = ${res_scanResult_result}
+                  - |
+                      if [[scanResult == 'success']] ; then
+                          exit 0;
+                      fi
+                  - exit 1;
