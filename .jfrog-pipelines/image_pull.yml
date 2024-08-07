@@ -11,5 +11,11 @@ pipelines:
             - df -h
             - docker pull releases-docker.jfrog.io/jfrog/pipelines-u20java:17
             - df -h
-            - docker run --name=cocalc -d -v ~/cocalc:/projects -p 443:443 sagemathinc/cocalc
+            - docker pull cocalc
+            - df -h
+            - mkdir testingDirectory
+            - cd testingDirectory
+            - git clone https://github.com/facebook/react.git .
+            - df -h
+            - npm install
             - df -h
