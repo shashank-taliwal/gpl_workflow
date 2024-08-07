@@ -11,8 +11,6 @@ pipelines:
             - df -h
             - docker pull releases-docker.jfrog.io/jfrog/pipelines-u20java:17
             - df -h
-            - docker pull cocalc
-            - df -h
             - mkdir testingDirectory
             - cd testingDirectory
             - git clone https://github.com/facebook/react.git .
