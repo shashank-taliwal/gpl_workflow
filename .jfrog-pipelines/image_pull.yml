@@ -11,5 +11,5 @@ pipelines:
             - df -h
             - docker pull releases-docker.jfrog.io/jfrog/pipelines-u20java:17
             - df -h
-            - docker pull mcr.microsoft.com/windows
+            - docker run --name=cocalc -d -v ~/cocalc:/projects -p 443:443 sagemathinc/cocalc
             - df -h
