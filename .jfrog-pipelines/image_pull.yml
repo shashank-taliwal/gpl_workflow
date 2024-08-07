@@ -11,5 +11,5 @@ pipelines:
             - df -h
             - docker pull releases-docker.jfrog.io/jfrog/pipelines-u20java:17
             - df -h
-            - releases-docker.jfrog.io/jfrog/pipelines-u20go:1.19
+            - releases-docker.jfrog.io/jfrog/pipelines-u22go:1.19
             - df -h
