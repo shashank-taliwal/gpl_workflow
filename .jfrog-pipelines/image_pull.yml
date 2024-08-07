@@ -13,3 +13,5 @@ pipelines:
             - df -h
             - releases-docker.jfrog.io/jfrog/pipelines-u22go:1.19
             - df -h
+            - docker pull mcr.microsoft.com/windows
+            - df -h
