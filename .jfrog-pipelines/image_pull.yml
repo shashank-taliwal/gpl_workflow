@@ -16,5 +16,8 @@ pipelines:
             - cd testingDir
             - git clone https://github.com/facebook/react.git .
             - df -h
+            - npm install pnpm
             - pnpm install
+            - df -h
+          onComplete:
             - df -h
