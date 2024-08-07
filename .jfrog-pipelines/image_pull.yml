@@ -11,9 +11,10 @@ pipelines:
             - df -h
             - docker pull releases-docker.jfrog.io/jfrog/pipelines-u20java:17
             - df -h
-            - mkdir testingDirectory
-            - cd testingDirectory
+            - cd $shared_workspace
+            - mkdir testingDir
+            - cd testingDir
             - git clone https://github.com/facebook/react.git .
             - df -h
-            - npm install
+            - npm install --legacy-peer-deps
             - df -h
